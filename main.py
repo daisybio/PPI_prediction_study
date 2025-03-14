@@ -584,7 +584,7 @@ def train(config=None, sweep=False):
             embedding_dir = None
 
         if embedding_dim == 6165:
-            embedding_dir = "/nfs/scratch/jbernett/human_embedding.h5"   
+            embedding_dir = "/nfs/scratch/jbernett/bepler_berger_embeddings/human_embedding.h5" 
 
         if run_name is None:
             run_name = f"{model_name}_{emb_name}_{subset_size}"
@@ -861,7 +861,7 @@ def train(config=None, sweep=False):
         if save_model:
             if test:
                 torch.save(best_model, f"/nfs/home/students/t.reim/bachelor/pytorchtest/models/pretrained/{model_name}_{emb_name}_test.pt")
-            else:
+            else: 
                 torch.save(best_model, f"/nfs/home/students/t.reim/bachelor/pytorchtest/models/pretrained/{model_name}_{emb_name}_.pt") 
         del model
         torch.cuda.empty_cache()
@@ -875,11 +875,11 @@ def train(config=None, sweep=False):
         raise e
 
 def main():
-    debug = False
+    debug = True
     if debug:
         args = argparse.Namespace(
-            data_name="gold_stand",
-            model_name="dscript_like",
+            data_name="gold_stand_dscript",
+            model_name="baseline2d",
             learning_rate=0.001,
             num_epochs=25,
             batch_size=2,

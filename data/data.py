@@ -259,7 +259,7 @@ def tensorize(sequence1, sequence2):
 
 def get_embedding_per_tok(dirpath, protein_id, layer):
     if dirpath.endswith(".h5"):
-        return get_embedding_per_tok_h5(dirpath, protein_id)
+        return get_embedding_per_tok_h5(dirpath, protein_id).squeeze(0)
     else:
         embedding = torch.load(os.path.join(dirpath, protein_id + ".pt"))
         return embedding['representations'][layer]
