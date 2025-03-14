@@ -1,0 +1,41 @@
+RFC-40 t33;0.56
+RFC-40 t36;0.58
+RFC-40 t48;0.57
+RFC-400 t33;0.52
+RFC-400 t36;0.52
+RFC-400 t48;0.52
+RFC-mean t33;0.53
+RFC-mean t36;0.53
+RFC-mean t48;0.52
+2d-baseline t33;0.57
+2d-baseline t36;0.53
+2d-baseline t48;0.52
+2d-Selfattention t33;0.60
+2d-Selfattention t36;0.57
+2d-Selfattention t48;0.54
+2d-Selfattention-no-spectral;0.50
+2d-Selfattention-encoder-pre-reduction;0.56
+2d-Crossattention t33;0.62
+2d-Crossattention t36;0.59
+2d-Crossattention t48;0.59
+2d-Crossattention-encoder-pre-reduction;0.58
+2d-Crossattention-no-spectral;0.50
+Richoux-ESM-2 t33;0.63
+Richoux-ESM-2 t36;0.64
+Richoux-ESM-2 t48;0.63
+Richoux-ESM-2-spectral;0.63
+Richoux-ESM-2-encoder-no-spectral;0.50
+Richoux-ESM-2-encoder-spectral;0.58
+D-SCRIPT-ESM-2 t33;0.63
+D-SCRIPT-ESM-2 t36;0.62
+D-SCRIPT-ESM-2 t48;0.56
+D-SCRIPT-ESM-2-encoder-pre-reduction;0.51
+D-SCRIPT-ESM-2-encoder-pre-reduction-no-spectral;0.50
+D-SCRIPT-ESM-2-encoder-post-reduction;0.62
+D-SCRIPT-ESM-2-encoder-crossattention;0.62
+TUnA t33;0.64
+TUnA t36;0.62
+TUnA t48;0.61
+TUnA-crossattention;0.66
+TUnA-unpadded;0.65
+TUnA-no-spectral;0.50
