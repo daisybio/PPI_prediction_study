@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import sys
+import numpy as np
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -13,10 +14,14 @@ class baseline2d(nn.Module):
     def __init__(self, embed_dim, h3 = 64, kernel_size = 2, pooling = 'avg'):
         super(baseline2d, self).__init__()
 
-    
-        h = int(embed_dim//4)
-        h2 = int(h//4)   
-        h3 = h3 
+        if embed_dim < 30:  #usually just the case for one-hot-encoding / might need to check this differently
+            h = h3
+            h2 = h3
+            h3 = h3
+        else:
+            h = int(embed_dim//4)
+            h2 = int(h//4)   
+            h3 = h3 
 
         self.conv = nn.Conv2d(h3, 1, kernel_size=kernel_size, padding='same')
         if pooling == 'max':
@@ -37,10 +42,10 @@ class baseline2d(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
 
-    def forward(self, protein1, protein2):
+    def forward(self, x1 = None, x2 = None):
 
-        x1 = protein1.to(torch.float32)
-        x2 = protein2.to(torch.float32)
+        x1 = x1.to(torch.float32)
+        x2 = x2.to(torch.float32)
 
         x1 = self.ReLU(self.fc1(x1))
         x1 = self.ReLU(self.fc2(x1))
@@ -73,13 +78,21 @@ class baseline2d(nn.Module):
         return x
     
 
-    def batch_iterate(self, batch, device, layer, emb_dir):
+    def batch_iterate(self, batch, device, layer, emb_dir, embedding=True):
             pred = []
             for i in range(len(batch['interaction'])):
                 id1 = batch['name1'][i]
                 id2 = batch['name2'][i]
-                seq1 = d.get_embedding_per_tok(emb_dir, id1, layer).to(device)
-                seq2 = d.get_embedding_per_tok(emb_dir, id2, layer).to(device)
+                if embedding:
+                    seq1 = d.get_embedding_per_tok(emb_dir, id1, layer).to(device)
+                    seq2 = d.get_embedding_per_tok(emb_dir, id2, layer).to(device)
+                else:
+                    seq1 = batch['sequence_a'][i]
+                    seq2 = batch['sequence_b'][i]
+                    seq1 = d.sequence_to_vector(seq1)
+                    seq2 = d.sequence_to_vector(seq2)
+                    seq1 = torch.tensor(np.array(seq1)).to(device)
+                    seq2 = torch.tensor(np.array(seq2)).to(device)
                 p, cm = self.forward(seq1, seq2)
                 pred.append(p)
             return torch.stack(pred)  

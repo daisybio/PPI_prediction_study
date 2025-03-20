@@ -554,37 +554,35 @@ def train(config=None, sweep=False):
     
         val_data = "/nfs/home/students/t.reim/bachelor/pytorchtest/data/" + data_name + "/" + data_name + "_val_all_seq.csv"
         
-        if embedding_dim == 2560:
-            emb_name = 'esm2_t36_3B'
-            layer = 36
-        elif embedding_dim == 1280: 
-            emb_name = 'esm2_t33_650'
-            layer = 33
-        elif embedding_dim == 5120:
-            emb_name = 'esm2_t48_15B'
-            layer = 48
-        elif embedding_dim == 6165:
-            emb_name = 'bepler_berger_2019'
-            layer = None  # Assuming there's no specific layer concept for this model
-            num_heads = 1
-        elif embedding_dim == 320:
-            emb_name = "esm2_t6_8M"
-            layer = 6
-
-            
         if mean_embedding:
             emb_type = 'mean'
         else:
             emb_type = 'per_tok'
 
-
         if use_embeddings:
+            if embedding_dim == 2560:
+                emb_name = 'esm2_t36_3B'
+                layer = 36
+            elif embedding_dim == 1280: 
+                emb_name = 'esm2_t33_650'
+                layer = 33
+            elif embedding_dim == 5120:
+                emb_name = 'esm2_t48_15B'
+                layer = 48 
+            elif embedding_dim == 320:
+                emb_name = "esm2_t6_8M"
+                layer = 6
             embedding_dir = "/nfs/scratch/t.reim/embeddings/" + emb_name + "/" + emb_type + "/"
+            if embedding_dim == 6165:
+                emb_name = 'bepler_berger_2019'
+                layer = None  # Assuming there's no specific layer concept for this model
+                num_heads = 1
+                embedding_dir = "/nfs/scratch/jbernett/bepler_berger_embeddings/human_embedding.h5"
         else:
+            layer = None
             embedding_dir = None
-
-        if embedding_dim == 6165:
-            embedding_dir = "/nfs/scratch/jbernett/bepler_berger_embeddings/human_embedding.h5" 
+            emb_name = "onehot"
+            
 
         if run_name is None:
             run_name = f"{model_name}_{emb_name}_{subset_size}"
@@ -640,10 +638,17 @@ def train(config=None, sweep=False):
         if use_embeddings:
             print("Using Embeddings: ", emb_name, " Mean: ", mean_embedding)
             insize = embedding_dim
-        else:     
-            print("Not Using Embeddings")  
-            print("Max Sequence Length: ", dataset.__max__())
-            insize = dataset.__max__()*24
+        else:   
+            if mean_embedding:
+                print("Not Using Embeddings")
+                print("Using Flattened One-Hot Encoding")  
+                print("Max Sequence Length: ", dataset.__max__())
+                insize = dataset.__max__()*24
+            else:
+                print("Not Using Embeddings")
+                print("Using 2d One-Hot Encoding")  
+                print("Max Sequence Length: ", dataset.__max__())
+                insize = 24
 
         model_mapping = {
             "dscript_like": dscript_like.DScriptLike(embed_dim=insize, d=d_, w=w, h=h, x0=x0, k=k, pool_size=pool_size, do_pool=do_pool,
@@ -702,7 +707,7 @@ def train(config=None, sweep=False):
                 optimizer.zero_grad()
 
                 if use_2d_data:
-                    outputs = model.batch_iterate(batch, device, layer, embedding_dir)
+                    outputs = model.batch_iterate(batch, device, layer, embedding_dir, use_embeddings)
                 else:
                     tensor = batch['tensor'].to(device)
                     outputs = model(tensor) 
@@ -752,7 +757,7 @@ def train(config=None, sweep=False):
                 for val_batch in vdataloader:
 
                     if use_2d_data:
-                        val_outputs = model.batch_iterate(val_batch, device, layer, embedding_dir)
+                        val_outputs = model.batch_iterate(val_batch, device, layer, embedding_dir, use_embeddings)
                     else:
                         val_inputs = val_batch['tensor'].to(device)
                         val_outputs = model(val_inputs)
@@ -795,7 +800,7 @@ def train(config=None, sweep=False):
                     for test_batch in test_dataloader:
 
                         if use_2d_data:
-                            test_outputs = model.batch_iterate(test_batch, device, layer, embedding_dir)
+                            test_outputs = model.batch_iterate(test_batch, device, layer, embedding_dir, use_embeddings)
                         else:
                             test_inputs = test_batch['tensor'].to(device)
                             test_outputs = model(test_inputs)
@@ -860,9 +865,9 @@ def train(config=None, sweep=False):
 
         if save_model:
             if test:
-                torch.save(best_model, f"/nfs/home/students/t.reim/bachelor/pytorchtest/models/pretrained/{model_name}_{emb_name}_test.pt")
+                torch.save(best_model, f"/nfs/home/students/t.reim/bachelor/pytorchtest/models/pretrained/{model_name}_{emb_name}_{run_name}_test.pt")
             else: 
-                torch.save(best_model, f"/nfs/home/students/t.reim/bachelor/pytorchtest/models/pretrained/{model_name}_{emb_name}_.pt") 
+                torch.save(best_model, f"/nfs/home/students/t.reim/bachelor/pytorchtest/models/pretrained/{model_name}_{emb_name}_{run_name}_.pt") 
         del model
         torch.cuda.empty_cache()
         
@@ -878,17 +883,17 @@ def main():
     debug = True
     if debug:
         args = argparse.Namespace(
-            data_name="gold_stand_dscript",
-            model_name="baseline2d",
+            data_name="gold_stand",
+            model_name="crossattention",
             learning_rate=0.001,
             num_epochs=25,
             batch_size=2,
             max_seq_len=1000,
             subset=False,
             subset_size=0.5,
-            use_embeddings=True,
+            use_embeddings=False,
             mean_embedding=False,
-            embedding_dim=6165,
+            embedding_dim=1280,
             use_wandb=False,
             early_stopping=True,
             dropout=0.3,
