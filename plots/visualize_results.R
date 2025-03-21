@@ -146,7 +146,7 @@ ggplot() +
   geom_segment(aes(x = 0.62, xend = 0.56, y = "ESM-2 t36", yend = "ESM-2 t48"), linetype = "longdash", color = "#490092")+
   geom_segment(aes(x = 0.64, xend = 0.62, y = "ESM-2 t33", yend = "ESM-2 t36"), linetype = "longdash", color = "#009999")+
   geom_segment(aes(x = 0.62, xend = 0.61, y = "ESM-2 t36", yend = "ESM-2 t48"), linetype = "longdash", color = "#009999")+
-  guides(color=guide_legend(nrow=2), shape=guide_legend(nrow=2))+
+  guides(color=guide_legend(nrow=2), shape=guide_legend(nrow=3))+
   theme(text = element_text(size=20), 
         axis.title.y = element_blank(),
         legend.position="bottom", 
@@ -155,7 +155,7 @@ ggplot() +
         legend.justification='left'
         )
 
-ggsave("embedding_sizes.png", width=8, height=4, dpi=300)
+ggsave("embedding_sizes.pdf", device = "pdf", width=8, height=4, dpi=300)
 
 encoder_df <- data[`Model Class` %in% c("2d-baseline", "2d-Selfattention", "2d-Crossattention", "D-SCRIPT-like", "Richoux-like", "TUnA-like")]
 encoder_df <- encoder_df[!(`Model Class` == "2d-baseline" & Model %in% c("t36", "t48"))]
@@ -175,22 +175,22 @@ encoder_df[, Model := ifelse(
       (`Model Class` == "D-SCRIPT-like" & Model == "Enc., Spec. Norm") | 
       (`Model Class` == "Richoux-like" & Model == "Enc., Spec. Norm")
   ,
-  "With self-att. Encoder",
-  "With cross-att. Encoder")
+  "Self-attention\n Encoder",
+  "Cross-attention\n Encoder")
 )]
 
-encoder_df[, Model := factor(Model, levels = rev(c("Baseline", "With self-att. Encoder", "With cross-att. Encoder")))]
+encoder_df[, Model := factor(Model, levels = rev(c("Baseline", "Self-attention\n Encoder", "Cross-attention\n Encoder")))]
 
 ggplot(encoder_df, 
        aes(x = Accuracy, y = Model, color = `Model Class`, shape = `Model Class`))+
   geom_point(size=5)+
   # draw a line from "2d-baseline" to "2d-Selfattention"
-  geom_segment(aes(x = 0.57, xend = 0.6, y = "Baseline", yend = "With self-att. Encoder"), linetype = "longdash", color = "#004949")+
-  geom_segment(aes(x = 0.6, xend = 0.62, y = "With self-att. Encoder", yend = "With cross-att. Encoder"), linetype = "longdash", color = "#db6d00")+
-  geom_segment(aes(x = 0.63, xend = 0.62, y = "Baseline", yend = "With self-att. Encoder"), linetype = "longdash", color = "#490092")+
-  geom_segment(aes(x = 0.62, xend = 0.62, y = "With self-att. Encoder", yend = "With cross-att. Encoder"), linetype = "longdash", color = "#490092")+
-  geom_segment(aes(x = 0.64, xend = 0.58, y = "Baseline", yend = "With self-att. Encoder"), linetype = "longdash", color = "#FDB462")+
-  geom_segment(aes(x = 0.64, xend = 0.66, y = "With self-att. Encoder", yend = "With cross-att. Encoder"), linetype = "longdash", color = "#009999")+
+  geom_segment(aes(x = 0.57, xend = 0.6, y = "Baseline", yend = "Self-attention\n Encoder"), linetype = "longdash", color = "#004949")+
+  geom_segment(aes(x = 0.6, xend = 0.62, y = "Self-attention\n Encoder", yend = "Cross-attention\n Encoder"), linetype = "longdash", color = "#db6d00")+
+  geom_segment(aes(x = 0.63, xend = 0.62, y = "Baseline", yend = "Self-attention\n Encoder"), linetype = "longdash", color = "#490092")+
+  geom_segment(aes(x = 0.62, xend = 0.62, y = "Self-attention\n Encoder", yend = "Cross-attention\n Encoder"), linetype = "longdash", color = "#490092")+
+  geom_segment(aes(x = 0.64, xend = 0.58, y = "Baseline", yend = "Self-attention\n Encoder"), linetype = "longdash", color = "#FDB462")+
+  geom_segment(aes(x = 0.64, xend = 0.66, y = "Self-attention\n Encoder", yend = "Cross-attention\n Encoder"), linetype = "longdash", color = "#009999")+
   scale_shape_manual(values=custom_shapes)+
   scale_color_manual(values=custom_colors)+
   xlim(0.5, 0.66)+
@@ -204,7 +204,7 @@ ggplot(encoder_df,
         legend.justification='left'
   )
 
-ggsave("add_encoder.png", width=8, height=4, dpi=300)
+ggsave("add_encoder.pdf", device = "pdf", width=8, height=4)
 
 spec_norm_df <- data[`Model Class` %in% c("TUnA-like", "Richoux-like", "2d-Selfattention", "2d-Crossattention", "D-SCRIPT-like")]
 spec_norm_df <- spec_norm_df[!(`Model Class` == "2d-Selfattention" & !Model %in% c("t33", "Enc., No Spec. Norm"))]
@@ -224,7 +224,7 @@ spec_norm_df[, Model := ifelse(
     (`Model Class` == "Richoux-ESM-2-encoder" & Model == "Enc., Spec. Norm") |
     (`Model Class` == "D-SCRIPT-like" & Model == "Enc., Spec. Norm") | 
     (`Model Class` == "TUnA-like" & Model == "t33"),
-  "With\nSpec. Norm", "Without\nSpec. Norm")]
+  "Spectral\n Norm", "No Spectral\n Norm")]
 
 custom_colors2 = c(
   "RFC-mean"="#ff0033",
@@ -252,11 +252,17 @@ custom_shapes2 <- c(
   "TUnA-like"=11
 )
 
-spec_norm_df[, Model := factor(Model, levels = c("Without\nSpec. Norm", "With\nSpec. Norm"))]
+spec_norm_df[, Model := factor(Model, levels = rev(c("Spectral\n Norm", "No Spectral\n Norm")))]
 
 ggplot(spec_norm_df, 
        aes(x = Accuracy, y = Model, color = `Model Class`, shape = `Model Class`))+
   geom_point(size=5)+
+  geom_segment(aes(x = 0.6, xend = 0.5, y = "Spectral\n Norm", yend = "No Spectral\n Norm"), linetype = "longdash", color = "#db6d00")+
+  geom_segment(aes(x = 0.62, xend = 0.5, y = "Spectral\n Norm", yend = "No Spectral\n Norm"), linetype = "longdash", color = "#B2DF8A")+
+  geom_segment(aes(x = 0.62, xend = 0.5, y = "Spectral\n Norm", yend = "No Spectral\n Norm"), linetype = "longdash", color = "#490092")+
+  geom_segment(aes(x = 0.64, xend = 0.5, y = "Spectral\n Norm", yend = "No Spectral\n Norm"), linetype = "longdash", color = "#009999")+
+  geom_segment(aes(x = 0.63, xend = 0.64, y = "Spectral\n Norm", yend = "No Spectral\n Norm"), linetype = "longdash", color = "#FDB462")+
+  geom_segment(aes(x = 0.58, xend = 0.5, y = "Spectral\n Norm", yend = "No Spectral\n Norm"), linetype = "longdash", color = "#ffcc00")+
   scale_shape_manual(values=custom_shapes2)+
   scale_color_manual(values=custom_colors2)+
   xlim(0.5, 0.66)+
@@ -269,7 +275,7 @@ ggplot(spec_norm_df,
         legend.margin=margin(),
         legend.justification='left'
   )
-ggsave("remove_spec_norm.png", width=8, height=3, dpi=300)
+ggsave("remove_spec_norm.pdf", device="pdf", width=8, height=3)
 
 encoder_placement <- data[`Model Class` %in% c("2d-Selfattention", "2d-Crossattention", "D-SCRIPT-like")]
 encoder_placement <- encoder_placement[!(`Model Class` == "2d-Selfattention" & !Model %in% c("t33", "Enc. Pre"))]
@@ -280,15 +286,15 @@ encoder_placement[, Model := ifelse(
   (`Model Class` == "2d-Selfattention" & Model == "t33") | 
     (`Model Class` == "2d-Crossattention" & Model == "t33") | 
     (`Model Class` == "D-SCRIPT-like" & Model == "Enc., Spec. Norm"),
-  "Encoder\npost dim. red.", "Encoder\npre dim. red.")]
-encoder_placement[, Model := factor(Model, levels = c("Encoder\npre dim. red.", "Encoder\npost dim. red."))]
+  "Post dimensionality\nreduction", "Pre dimensionality\nreduction")]
+encoder_placement[, Model := factor(Model, levels = c("Pre dimensionality\nreduction", "Post dimensionality\nreduction"))]
 
 ggplot(encoder_placement, 
        aes(x = Accuracy, y = Model, color = `Model Class`, shape = `Model Class`))+
   geom_point(size=5)+
-  geom_segment(aes(x = 0.6, xend = 0.56, y = "Encoder\npost dim. red.", yend = "Encoder\npre dim. red."), linetype = "longdash", color = "#db6d00")+
-  geom_segment(aes(x = 0.62, xend = 0.58, y = "Encoder\npost dim. red.", yend = "Encoder\npre dim. red."), linetype = "longdash", color = "#B2DF8A")+
-  geom_segment(aes(x = 0.62, xend = 0.51, y = "Encoder\npost dim. red.", yend = "Encoder\npre dim. red."), linetype = "longdash", color = "#490092")+
+  geom_segment(aes(x = 0.6, xend = 0.56, y = "Post dimensionality\nreduction", yend = "Pre dimensionality\nreduction"), linetype = "longdash", color = "#db6d00")+
+  geom_segment(aes(x = 0.62, xend = 0.58, y = "Post dimensionality\nreduction", yend = "Pre dimensionality\nreduction"), linetype = "longdash", color = "#B2DF8A")+
+  geom_segment(aes(x = 0.62, xend = 0.51, y = "Post dimensionality\nreduction", yend = "Pre dimensionality\nreduction"), linetype = "longdash", color = "#490092")+
   scale_shape_manual(values=custom_shapes2)+
   scale_color_manual(values=custom_colors2)+
   xlim(0.5, 0.66)+
@@ -301,4 +307,4 @@ ggplot(encoder_placement,
         legend.margin=margin(),
         legend.justification='left'
   )
-ggsave("encoder_placement.png", width=8, height=3, dpi=300)
+ggsave("encoder_placement.pdf", device="pdf", width=8.2, height=3)
