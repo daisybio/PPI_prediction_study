@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import numpy as np
 import torch.nn.functional as F
 
 import data.data as d
@@ -132,16 +133,25 @@ class DScriptLike(nn.Module):
         return phat, C
 
 
-    def batch_iterate(self, batch, device, layer, emb_dir):
-        pred = []
-        for i in range(len(batch['interaction'])):
-            id1 = batch['name1'][i]
-            id2 = batch['name2'][i]
-            seq1 = d.get_embedding_per_tok(emb_dir, id1, layer).to(device)
-            seq2 = d.get_embedding_per_tok(emb_dir, id2, layer).to(device)
-            p, cm = self.forward(seq1, seq2)
-            pred.append(p)
-        return torch.stack(pred)      
+    def batch_iterate(self, batch, device, layer, emb_dir, embedding=True):
+            pred = []
+            for i in range(len(batch['interaction'])):
+                id1 = batch['name1'][i]
+                id2 = batch['name2'][i]
+                if embedding:
+                    seq1 = d.get_embedding_per_tok(emb_dir, id1, layer).to(device)
+                    seq2 = d.get_embedding_per_tok(emb_dir, id2, layer).to(device)
+                else:
+                    seq1 = batch['sequence_a'][i]
+                    seq2 = batch['sequence_b'][i]
+                    seq1 = d.sequence_to_vector(seq1)
+                    seq2 = d.sequence_to_vector(seq2)
+                    seq1 = torch.tensor(np.array(seq1)).to(device)
+                    seq2 = torch.tensor(np.array(seq2)).to(device)
+                p, cm = self.forward(seq1, seq2)
+                pred.append(p)
+            return torch.stack(pred) 
+   
 
     def clip(self):
         """

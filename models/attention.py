@@ -5,6 +5,7 @@ import sys
 import math
 import models.dscript_like as dscript_like
 import torch.nn.utils.spectral_norm as spectral_norm
+import numpy as np
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
@@ -39,8 +40,8 @@ class CrossAttInteraction(nn.Module):
 
 
     def forward(self, protein1, protein2, mask1=None, mask2=None):
-        x1 = protein1.to(torch.float32)
-        x2 = protein2.to(torch.float32)
+        x1 = protein1.to(torch.float32).unsqueeze(0)
+        x2 = protein2.to(torch.float32).unsqueeze(0)
 
 
         x1 = self.ReLU(self.fc1(x1))
@@ -75,16 +76,24 @@ class CrossAttInteraction(nn.Module):
         return pred, mat
     
 
-    def batch_iterate(self, batch, device, layer, emb_dir):
+    def batch_iterate(self, batch, device, layer, emb_dir, embedding=True):
             pred = []
             for i in range(len(batch['interaction'])):
                 id1 = batch['name1'][i]
                 id2 = batch['name2'][i]
-                seq1 = d.get_embedding_per_tok(emb_dir, id1, layer).unsqueeze(0).to(device)
-                seq2 = d.get_embedding_per_tok(emb_dir, id2, layer).unsqueeze(0).to(device)
+                if embedding:
+                    seq1 = d.get_embedding_per_tok(emb_dir, id1, layer).to(device)
+                    seq2 = d.get_embedding_per_tok(emb_dir, id2, layer).to(device)
+                else:
+                    seq1 = batch['sequence_a'][i]
+                    seq2 = batch['sequence_b'][i]
+                    seq1 = d.sequence_to_vector(seq1)
+                    seq2 = d.sequence_to_vector(seq2)
+                    seq1 = torch.tensor(np.array(seq1)).to(device)
+                    seq2 = torch.tensor(np.array(seq2)).to(device)
                 p, cm = self.forward(seq1, seq2)
                 pred.append(p)
-            return torch.stack(pred)
+            return torch.stack(pred) 
 
 
 class SelfAttInteraction(nn.Module):
@@ -113,8 +122,8 @@ class SelfAttInteraction(nn.Module):
         self.sigmoid = nn.Sigmoid()
 
     def forward(self, protein1, protein2, mask1=None, mask2=None):
-        x1 = protein1.to(torch.float32)
-        x2 = protein2.to(torch.float32)
+        x1 = protein1.to(torch.float32).unsqueeze(0)
+        x2 = protein2.to(torch.float32).unsqueeze(0)
 
 
         x1 = self.ReLU(self.fc1(x1))
@@ -142,16 +151,24 @@ class SelfAttInteraction(nn.Module):
         return pred, mat
 
 
-    def batch_iterate(self, batch, device, layer, emb_dir):
+    def batch_iterate(self, batch, device, layer, emb_dir, embedding=True):
             pred = []
             for i in range(len(batch['interaction'])):
                 id1 = batch['name1'][i]
                 id2 = batch['name2'][i]
-                seq1 = d.get_embedding_per_tok(emb_dir, id1, layer).unsqueeze(0).to(device)
-                seq2 = d.get_embedding_per_tok(emb_dir, id2, layer).unsqueeze(0).to(device)
+                if embedding:
+                    seq1 = d.get_embedding_per_tok(emb_dir, id1, layer).to(device)
+                    seq2 = d.get_embedding_per_tok(emb_dir, id2, layer).to(device)
+                else:
+                    seq1 = batch['sequence_a'][i]
+                    seq2 = batch['sequence_b'][i]
+                    seq1 = d.sequence_to_vector(seq1)
+                    seq2 = d.sequence_to_vector(seq2)
+                    seq1 = torch.tensor(np.array(seq1)).to(device)
+                    seq2 = torch.tensor(np.array(seq2)).to(device)
                 p, cm = self.forward(seq1, seq2)
                 pred.append(p)
-            return torch.stack(pred)
+            return torch.stack(pred) 
 
 
 class AttentionDscript(nn.Module):
@@ -341,6 +358,8 @@ class TUnA(nn.Module):
         if proteins is not None:
             x1, x2 = proteins.split(1, dim=1)
        
+        x1 = x1.to(torch.float32)
+        x2 = x2.to(torch.float32)
         x1 = x1.squeeze(1)
         x2 = x2.squeeze(1)
 
@@ -430,16 +449,24 @@ class TUnA(nn.Module):
         combined_mask[:, :, lenA:, lenA:] = maskB
         return combined_mask
 
-    def batch_iterate(self, batch, device, layer, emb_dir):
+    def batch_iterate(self, batch, device, layer, emb_dir, embedding=True):
             pred = []
             for i in range(len(batch['interaction'])):
                 id1 = batch['name1'][i]
                 id2 = batch['name2'][i]
-                seq1 = d.get_embedding_per_tok(emb_dir, id1, layer).unsqueeze(0).to(device)
-                seq2 = d.get_embedding_per_tok(emb_dir, id2, layer).unsqueeze(0).to(device)
-                p = self.forward(proteins=None, x1=seq1, x2=seq2)
+                if embedding:
+                    seq1 = d.get_embedding_per_tok(emb_dir, id1, layer).to(device)
+                    seq2 = d.get_embedding_per_tok(emb_dir, id2, layer).to(device)
+                else:
+                    seq1 = batch['sequence_a'][i]
+                    seq2 = batch['sequence_b'][i]
+                    seq1 = d.sequence_to_vector(seq1)
+                    seq2 = d.sequence_to_vector(seq2)
+                    seq1 = torch.tensor(np.array(seq1)).to(device)
+                    seq2 = torch.tensor(np.array(seq2)).to(device)
+                p, cm = self.forward(None, seq1, seq2)
                 pred.append(p)
-            return torch.stack(pred).squeeze(1)
+            return torch.stack(pred) 
     
     def old_code(self):
         # Old code using torch encoder
