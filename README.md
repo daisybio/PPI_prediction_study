@@ -1,6 +1,19 @@
 # Deep learning models for unbiased sequence-based PPI prediction plateau at an accuracy of 0.65
 
+[![DOI](https://img.shields.io/badge/paper-10.1093%2Fbioinformatics%2Fbtaf192-407fc7?logo=Paper&link=https%3A%2F%2Fdoi.org%2F10.1093%2Fbioinformatics%2Fbtaf192)](https://doi.org/10.1093/bioinformatics/btaf192)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21456911.svg?cache=1)](https://doi.org/10.5281/zenodo.21456911)
+
 ![Figure 1 embedding paper](https://github.com/user-attachments/assets/23bed63f-5e0f-467b-8fd6-5262104196c6)
+
+Check out our [paper](https://doi.org/10.1093/bioinformatics/btaf192)
+
+```
+Timo Reim, Anne Hartebrodt, David B Blumenthal, Judith Bernett, Markus List,
+Deep learning models for unbiased sequence-based PPI prediction plateau at an accuracy of 0.65,
+Bioinformatics, Volume 41, Issue Supplement_1, July 2025, Pages i590–i598
+```
+
+All data is stored at [Zenodo](https://zenodo.org/records/21456911).
 
 ## Data
 We used the data leakage-free PPI dataset from [Bernett et al](https://figshare.com/articles/dataset/PPI_prediction_from_sequence_gold_standard_dataset/21591618) available on figshare (DOI: 10.6084/m9.figshare.21591618.v3). 
